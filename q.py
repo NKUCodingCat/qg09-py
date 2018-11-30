@@ -156,7 +156,7 @@ Defaults = {
         "~": "$HOME"
     },
 
-    "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
+    "PBS_envs": ""
 }
 
 # DONE:  system admin override default here => ./qg09rc
