@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.7
+
 def submit_pbs_job(job_file, jobs, args):
 
     bfile = job_file
@@ -67,9 +69,9 @@ def fix_input(Gau_job_text, Res_regex, Res_value):
             Out[i] = Res_value
     if not is_resource_line_exist: Out = [Res_value, ] + Out
 
-    return "\n".join(map(lambda x: x.rstrip(), Out))
+    return "\n".join(map(lambda x: x.rstrip(), Out)) + "\n"
 
-def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, args):
+def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, scr_dir):
     return "\n".join([
         "",
         "cd {}",
@@ -80,10 +82,10 @@ def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, args):
         "",
     ]).format(
         args.Work_dir,
-        args.s,
-        args.s,
+        scr_dir,
+        scr_dir,
         Gau_inp_filename, Gau_log_filename,
-        args.s
+        scr_dir
     )
 
 def Merge_Config(Default_cfg, Override_config):
@@ -123,16 +125,17 @@ def Check_scr_string(string):
     if string in t:
         return t[string]
     else:
+        string=os.path.realpath(string)
         print "\n!! WARNING: you are using scratch %s, Please ensure what you are doing !!\n"%string
         return string
 
 def Check_gau_inp(string):
     if os.path.isfile(string): return string
-    else: raise argparse.ArgumentTypeError("Gaussian input file %s does not exist!"%string)
+    else: raise argparse.ArgumentTypeError("Gaussian input file \"%s\" does not exist!"%string)
 
 # ================ MAIN ========================
 
-import argparse, re, humanfriendly, copy, os, commentjson
+import argparse, re, humanfriendly, copy, os, commentjson, time
 
 __VERSION__ = "0.0.1"
 
@@ -140,7 +143,7 @@ Defaults = {
     "Options_default":{
         'b': 1,
         'e': "no",
-        'l': "no",
+        'l': "",
         'm': "15000mb",
         'n': "1",
         'p': 20,
@@ -163,7 +166,7 @@ Defaults = {
 # DONE:          user override default here => $HOME/.qg09rc
 # DONE: Working space override default here => $PWD/qg09rc
 
-for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.json"), os.path.join(os.path.expanduser("~"), ".qg09.json"), os.path.join(os.getcwd(), "qg09.json")  ]:
+for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.jsonc"), os.path.join(os.path.expanduser("~"), ".qg09.jsonc"), os.path.join(os.getcwd(), "qg09.jsonc")  ]:
     if os.path.isfile(i):
         with open(i) as conf:
             Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
@@ -175,13 +178,13 @@ parser = argparse.ArgumentParser(description="", formatter_class=argparse.Argume
 
 parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
 parser.add_argument('-e', help='email notification when ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["e"])
-parser.add_argument('-l', help='email notification when job ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["l"])
+parser.add_argument('-l', help='addition to PBS resource list', type=str, default=Defaults["Options_default"]["l"])
 parser.add_argument('-m', help='memory used per node <Amomut><Unit>', type=Check_mem_string, default=Defaults["Options_default"]["m"])
 parser.add_argument('-n', help='the number of nodes used', type=int, default=Defaults["Options_default"]["n"])
 parser.add_argument('-p', help='the number of processors used per node', type=int, default=Defaults["Options_default"]["p"])
 parser.add_argument('-q', help='the queue to submit the job', default=Defaults["Options_default"]["q"])
 parser.add_argument('-r', help='submit the job?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["r"])
-parser.add_argument('-s', help='scratch space to use (<Absolute path> / {})'.format(" / ".join(map(lambda x: "\"%s\""%str(x), Defaults["Scratch_maps"].keys()))), type=Check_scr_string, default=Defaults["Options_default"]["s"])
+parser.add_argument('-s', help='scratch space to use (<Absolute or relative path> / {})'.format(" / ".join(map(lambda x: "\"%s\""%str(x), Defaults["Scratch_maps"].keys()))), type=Check_scr_string, default=Defaults["Options_default"]["s"])
 parser.add_argument('-t', help='the amount of wall clock time (format: hh:mm:ss)', type=Check_time_string, default=Defaults["Options_default"]["t"])
 parser.add_argument('-x', help='additional PBS node features required', default=Defaults["Options_default"]["x"])
 
@@ -195,16 +198,54 @@ vars(args)["PBS_envs"] = Defaults["PBS_envs"]
 vars(args)["Work_dir"] = os.getcwd()
 print args
 
+# ==========================================================
+
+def batch_Gen(batch, args, Gau_inps):
+
+    for idx, inp in enumerate(Gau_inps):
+
+        if batch == 1 : scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID")
+        else:           scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID", str(idx%batch))
+        
+        with open(inp) as f:
+            Q = f.read()
+            Q = fix_input(Q, "^%nprocs[^=]*=[^=]+$", "%%NProcShared=%d"%args.p)
+            Q = fix_input(Q, "^%mem[^=]*=[^=]+$",    "%%mem=%dmb"%args.m)
+        
+        with open(inp, "w") as f:
+            f.write(Q)
+
+        f_base = os.path.splitext(inp)[0]
+
+        #                                                                                                 5: submit!  
+        yield ( inp, f_base, idx/batch, idx%batch, make_Gau_job_Block(inp, f_base+".log", scr_dir), (idx+1)%batch == 0)
+
+        
+Start_time = time.time()
+job_List = []
+for f in batch_Gen(args.b, args, args.Gau_inputs):
+
+    if args.b == 1 : batch_file_name = f[1]
+    else:            batch_file_name = "Gau_Batch_" + str(f[2]) + "_" + str(Start_time)
+
+    job_List.append(f[4])
+
+    if f[5]: 
+        submit_pbs_job(batch_file_name, job_List, args)
+        job_List = []
+
+if not f[5]:
+    submit_pbs_job(batch_file_name, job_List, args)
 
 # TODO: filename/file process
 
 # Target: Read Gaussian inputs file then make batch pbs 
 
-Q = open(args.Gau_inputs[0]).read()
-Q = fix_input(Q, "^%nprocs[^=]+=[^=]+$", "%%NProcShared=%d"%args.p)
-Q = fix_input(Q, "^%mem[^=]+=[^=]+$",    "%%mem=%d"%args.m)
-print Q
+# Q = open(args.Gau_inputs[0]).read()
+# Q = fix_input(Q, "^%nprocs[^=]+=[^=]+$", "%%NProcShared=%d"%args.p)
+# Q = fix_input(Q, "^%mem[^=]+=[^=]+$",    "%%mem=%d"%args.m)
+# print Q
 
-S = make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
+# S = make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
 
-submit_pbs_job("oxoium", [S, ], copy.deepcopy(args))
+# submit_pbs_job("oxoium", [S, ], copy.deepcopy(args))
