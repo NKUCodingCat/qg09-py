@@ -1,0 +1,18 @@
+#user defaults
+time         168:00:00
+proc         20 
+nodes        1
+run          yes
+email        never
+scratch      local 
+batchsize    1
+membuffer    0                    
+mem          15gb                   # amount of memory requested by PBS 
+queue        batch 
+
+#system settings
+scratchsp    local
+maxmem       1000000 
+maxtime      600
+maxnodes     1
+maxproc      40

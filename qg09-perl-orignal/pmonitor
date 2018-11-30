@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+my $isleep=1;
+my $PBS_JOBID = $ENV{'PBS_JOBID'};
+my $max_res=0;
+my $max_vir=0;
+
+if ( !@ARGV ) {
+    Usage();
+    exit 1;
+}
+
+my $pid = $ARGV[0];
+
+if ( $ARGV[1] ){
+  $isleep=$ARGV[1];
+}
+
+`touch monitor.$PBS_JOBID`;
+
+print "Monitor start: ";
+print `date +%s`;
+
+while ( -e "monitor.$PBS_JOBID" ) {
+  my $tree = getTree($pid);    
+  print ${$tree}{'total_resident'}, "\n";
+  if (${$tree}{'total_resident'} > $max_res){$max_res = ${$tree}{'total_resident'}};
+  if (${$tree}{'total_virtual'}  > $max_vir){$max_vir = ${$tree}{'total_virtual'}};
+  sleep $isleep;
+}
+
+print "Monitor finish: ";
+print `date +%s`;
+print "Polling Frequency: $isleep seconds\n";
+print "Maximum Resident Memory: $max_res kB\n";
+
+sub getTree {
+  my ($pid) = @_;
+  my %tree;
+  my $string = `pstree -p $pid`;
+  my @pids = ($string =~ /\((\d+)\)/g);
+
+  foreach my $id (@pids){
+    my $pmap = `pmap -x $id | tail -n 1`;
+    my $factor=1;
+    if ($pmap =~ /total MB/) {$factor=1024};
+    $pmap =~ /(\d+)\s+(\d+)\s+(\d+)/;
+    ${$tree{$id}}{"virtual"}  = $1*$factor;
+    ${$tree{$id}}{"resident"} = $2*$factor;
+    $tree{'total_virtual'}   += $1*$factor;
+    $tree{'total_resident'}  += $2*$factor;
+  }
+  return \%tree;  
+}
+
+sub Usage {
+  print "Usage: ./pmonitor <process number> [<sample time in sec>] \n";
+}
+
+
