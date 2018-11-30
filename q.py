@@ -86,14 +86,13 @@ def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, args):
         args.s
     )
 
+# TODO: a merge config function
 
 # ================ MAIN ========================
 
 import argparse, re, humanfriendly, copy, os
 
 __VERSION__ = "0.0.1"
-
-# TODO: ReadConfig here
 
 Defaults = {
     "Options_default":{
@@ -117,6 +116,10 @@ Defaults = {
 
     "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
 }
+
+# TODO:  system admin override default here => ./qg09rc
+# TODO:          user override default here => $HOME/.qg09rc
+# TODO: Working space override default here => $PWD/qg09rc
 
 # ========= Args Check functions & arguments ================
 
@@ -142,6 +145,10 @@ def Check_scr_string(string):
         print "\n!! WARNING: you are using scratch %s, Please ensure what you are doing !!\n"%string
         return string
 
+def Check_gau_inp(string):
+    if os.path.isfile(string): return string
+    else: raise argparse.ArgumentTypeError("Gaussian input file %s does not exist!"%string)
+
 parser = argparse.ArgumentParser(description="", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
@@ -156,7 +163,7 @@ parser.add_argument('-s', help='scratch space to use (<Absolute path> / {})'.for
 parser.add_argument('-t', help='the amount of wall clock time (format: hh:mm:ss)', type=Check_time_string, default=Defaults["Options_default"]["t"])
 parser.add_argument('-x', help='additional PBS node features required', default=Defaults["Options_default"]["x"])
 
-parser.add_argument('Gau_inputs', nargs="+", help='Gaussian INPUT file (*.com or *.gjf)')
+parser.add_argument('Gau_inputs', nargs="+", type=Check_gau_inp, help='Gaussian INPUT file (*.com or *.gjf)')
 
 args = parser.parse_args()
 
@@ -176,7 +183,7 @@ Q = fix_input(Q, "^%nprocs[^=]+=[^=]+$", "%%NProcShared=%d"%args.p)
 Q = fix_input(Q, "^%mem[^=]+=[^=]+$",    "%%mem=%d"%args.m)
 print Q
 
-print make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
+S = make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
 
 
-submit_pbs_job("oxoium", [], copy.deepcopy(args))
+submit_pbs_job("oxoium", [S, ], copy.deepcopy(args))
