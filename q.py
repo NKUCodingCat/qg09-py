@@ -86,42 +86,23 @@ def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, args):
         args.s
     )
 
-# TODO: a merge config function
-
-# ================ MAIN ========================
-
-import argparse, re, humanfriendly, copy, os
-
-__VERSION__ = "0.0.1"
-
-Defaults = {
-    "Options_default":{
-        'b': 1,
-        'e': "no",
-        'l': "no",
-        'm': "15000mb",
-        'n': "1",
-        'p': 20,
-        'q': "batch",
-        'r': "no",
-        's': "local",
-        't': "168:00:00",
-        'x': "",
-    },
+def Merge_Config(Default_cfg, Override_config):
     
-    "Scratch_maps": {
-        "local": "/tmp/",
-        "~": "$HOME"
-    },
+    Default_cfg = copy.deepcopy(Default_cfg)
 
-    "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
-}
+    for key in Default_cfg.keys():
+        if key in Override_config:
+            if isinstance(Default_cfg[key], dict):
+                # Merge dictDefauDefault_cfg
+                assert isinstance(Override_config[key], dict), "Overriding config key %s is not a dictionary"
+                Default_cfg[key].update(Override_config[key])
+            else:
+                # replace value
+                Default_cfg[key] = Override_config[key]
+    
+    return Default_cfg
 
-# TODO:  system admin override default here => ./qg09rc
-# TODO:          user override default here => $HOME/.qg09rc
-# TODO: Working space override default here => $PWD/qg09rc
-
-# ========= Args Check functions & arguments ================
+# ============= Args checking functions ========
 
 def Check_time_string(string):
     if None == re.match(r"\d+:\d\d:\d\d", string):
@@ -148,6 +129,47 @@ def Check_scr_string(string):
 def Check_gau_inp(string):
     if os.path.isfile(string): return string
     else: raise argparse.ArgumentTypeError("Gaussian input file %s does not exist!"%string)
+
+# ================ MAIN ========================
+
+import argparse, re, humanfriendly, copy, os, commentjson
+
+__VERSION__ = "0.0.1"
+
+Defaults = {
+    "Options_default":{
+        'b': 1,
+        'e': "no",
+        'l': "no",
+        'm': "15000mb",
+        'n': "1",
+        'p': 20,
+        'q': "batch",
+        'r': "no",
+        's': "local",
+        't': "168:00:00",
+        'x': "",
+    },
+    
+    "Scratch_maps": {
+        "local": "/tmp/",
+        "~": "$HOME"
+    },
+
+    "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
+}
+
+# DONE:  system admin override default here => ./qg09rc
+# DONE:          user override default here => $HOME/.qg09rc
+# DONE: Working space override default here => $PWD/qg09rc
+
+for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.json"), os.path.join(os.path.expanduser("~"), ".qg09.json"), os.path.join(os.getcwd(), "qg09.json")  ]:
+    if os.path.isfile(i):
+        with open(i) as conf:
+            Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
+
+# ========= Args Check functions & arguments ================
+
 
 parser = argparse.ArgumentParser(description="", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -184,6 +206,5 @@ Q = fix_input(Q, "^%mem[^=]+=[^=]+$",    "%%mem=%d"%args.m)
 print Q
 
 S = make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
-
 
 submit_pbs_job("oxoium", [S, ], copy.deepcopy(args))

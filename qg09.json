@@ -1,0 +1,15 @@
+// We are using commentjson to parse 
+// so just keep these comments and use json as what you used to write
+
+{
+    "Options_default": {
+        "p": 15
+    },
+    "Scratch_maps":{
+
+    }
+    // you can not leave a empty string as a value
+    // since the behaviour of string / int / boolean in
+    // Merge_Config is replace but not merge
+    // , "PBS_envs":
+}
