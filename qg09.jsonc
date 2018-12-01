@@ -12,6 +12,11 @@
     // The behaviour of string / int / boolean value in
     // Merge_Config is replace but not merge
     , "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
-    , "Pre_run_Gaussian":  "# >>>>>>>>>>>>>>  This is a start line  <<<<<<<<<<<<<"
-    , "Post_run_Gaussian": "# >>>>>>>>>>>>>>   This is a end line   <<<<<<<<<<<<<"
+    , "Pre_run_Gaussian":  "# >>>>>>>>>>>>>>>>  Go Gaussian Go  <<<<<<<<<<<<<<<<<<"
+    , "Post_run_Gaussian": "# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<<"
+
+    // You should be noted that the Pre_run_Gaussian and Post_run_Gaussian 
+    // are copied to the pbs file in raw (so as PBS_envs), thus you need
+    // to double-check the generated pbs file before you changed setting
+    // (by using `-r no` to dry run)
 }
