@@ -245,15 +245,4 @@ for f in batch_Gen(args.b, args, args.Gau_inputs):
 if not f[5]:
     submit_pbs_job(batch_file_name, job_List, args)
 
-# TODO: filename/file process
-
-# Target: Read Gaussian inputs file then make batch pbs 
-
-# Q = open(args.Gau_inputs[0]).read()
-# Q = fix_input(Q, "^%nprocs[^=]+=[^=]+$", "%%NProcShared=%d"%args.p)
-# Q = fix_input(Q, "^%mem[^=]+=[^=]+$",    "%%mem=%d"%args.m)
-# print Q
-
-# S = make_Gau_job_Block(args.Gau_inputs[0], args.Gau_inputs[0]+".log", copy.deepcopy(args))
-
-# submit_pbs_job("oxoium", [S, ], copy.deepcopy(args))
+# TODO: Unittest
