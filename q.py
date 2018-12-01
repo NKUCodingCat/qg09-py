@@ -72,21 +72,29 @@ def fix_input(Gau_job_text, Res_regex, Res_value):
     return "\n".join(map(lambda x: x.rstrip(), Out)) + "\n"
 
 def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, work_dir, scr_dir):
-    return "\n".join([
+
+    A = "\n".join([
         "",
         "cd {}",
         "mkdir -p {}",
-        "export GAUSS_SCRDIR={}",
-        "/usr/bin/time g09 < {} >& {}",
-        "if ls \"{}/*.rwf\" 2>&1; then rm \"{}/*.rwf\"; fi ",
-        "",
+        "export GAUSS_SCRDIR='{}'", 
+        "export QG09_GAU_INP_FILE='{}'",
+        "export QG09_GAU_LOG_FILE='{}'", ""]).format(
+            work_dir,
+            scr_dir,
+            scr_dir,
+            Gau_inp_filename,
+            Gau_log_filename
+        )
+    
+    B = "\n".join([
+        "/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE",
+        "if ls \"{}/*.rwf\" 2>&1; then rm \"{}/*.rwf\"; fi ", ""
     ]).format(
-        work_dir,
-        scr_dir,
-        scr_dir,
-        Gau_inp_filename, Gau_log_filename,
         scr_dir, scr_dir
     )
+
+    return A, B
 
 def Merge_Config(Default_cfg, Override_config):
     
@@ -221,8 +229,10 @@ def batch_Gen(batch, args, Gau_inps):
 
         f_base = os.path.splitext(inp)[0]
 
-        Gau_block = args.Pre_run_Gaussian + "\n" + \
-                    make_Gau_job_Block(inp, f_base+".log", args.Work_dir, scr_dir) + "\n" + \
+        pre_gau, gau = make_Gau_job_Block(inp, f_base+".log", args.Work_dir, scr_dir)
+        Gau_block = pre_gau + "\n" +\
+                    args.Pre_run_Gaussian + "\n" + \
+                    gau + "\n" + \
                     args.Post_run_Gaussian + "\n"
 
         #                                                        5: submit!  
