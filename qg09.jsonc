@@ -3,13 +3,15 @@
 
 {
     "Options_default": {
-        "p": 15
+        "p": 10, 
+        "m": "4gb"
     },
     "Scratch_maps":{
 
     }
-    // you can not leave a empty string as a value
-    // since the behaviour of string / int / boolean in
+    // The behaviour of string / int / boolean value in
     // Merge_Config is replace but not merge
     , "PBS_envs": "export PATH=/opt/nbo6/bin:$PATH \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft \nsource /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile \nexport GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR\n"
+    , "Pre_run_Gaussian":  "# >>>>>>>>>>>>>>  This is a start line  <<<<<<<<<<<<<"
+    , "Post_run_Gaussian": "# >>>>>>>>>>>>>>   This is a end line   <<<<<<<<<<<<<"
 }

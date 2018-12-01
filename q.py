@@ -71,21 +71,21 @@ def fix_input(Gau_job_text, Res_regex, Res_value):
 
     return "\n".join(map(lambda x: x.rstrip(), Out)) + "\n"
 
-def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, scr_dir):
+def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, work_dir, scr_dir):
     return "\n".join([
         "",
         "cd {}",
         "mkdir -p {}",
         "export GAUSS_SCRDIR={}",
         "/usr/bin/time g09 < {} >& {}",
-        "rm {}/*.rwf",
+        "if ls \"{}/*.rwf\" 2>&1; then rm \"{}/*.rwf\"; fi ",
         "",
     ]).format(
-        args.Work_dir,
+        work_dir,
         scr_dir,
         scr_dir,
         Gau_inp_filename, Gau_log_filename,
-        scr_dir
+        scr_dir, scr_dir
     )
 
 def Merge_Config(Default_cfg, Override_config):
@@ -137,7 +137,7 @@ def Check_gau_inp(string):
 
 import argparse, re, humanfriendly, copy, os, commentjson, time
 
-__VERSION__ = "0.0.1"
+__VERSION__ = "0.1.0"
 
 Defaults = {
     "Options_default":{
@@ -159,7 +159,9 @@ Defaults = {
         "~": "$HOME"
     },
 
-    "PBS_envs": ""
+    "PBS_envs": "",
+    "Pre_run_Gaussian":  "",
+    "Post_run_Gaussian": "",
 }
 
 # DONE:  system admin override default here => ./qg09rc
@@ -174,7 +176,7 @@ for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.json
 # ========= Args Check functions & arguments ================
 
 
-parser = argparse.ArgumentParser(description="", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description="qg09-py Ver %s - Process multiple Gaussian input as torque jobs"%__VERSION__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
 parser.add_argument('-e', help='email notification when ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["e"])
@@ -196,6 +198,8 @@ args = parser.parse_args()
 
 vars(args)["PBS_envs"] = Defaults["PBS_envs"]
 vars(args)["Work_dir"] = os.getcwd()
+vars(args)["Pre_run_Gaussian"] = Defaults["Pre_run_Gaussian"]
+vars(args)["Post_run_Gaussian"] = Defaults["Post_run_Gaussian"]
 print args
 
 # ==========================================================
@@ -217,8 +221,12 @@ def batch_Gen(batch, args, Gau_inps):
 
         f_base = os.path.splitext(inp)[0]
 
-        #                                                                                                 5: submit!  
-        yield ( inp, f_base, idx/batch, idx%batch, make_Gau_job_Block(inp, f_base+".log", scr_dir), (idx+1)%batch == 0)
+        Gau_block = args.Pre_run_Gaussian + "\n" + \
+                    make_Gau_job_Block(inp, f_base+".log", args.Work_dir, scr_dir) + "\n" + \
+                    args.Post_run_Gaussian + "\n"
+
+        #                                                        5: submit!  
+        yield ( inp, f_base, idx/batch, idx%batch, Gau_block , (idx+1)%batch == 0)
 
         
 Start_time = time.time()
