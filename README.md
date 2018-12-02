@@ -9,7 +9,7 @@ It can modify gaussian input files to assigned proccessor number and memory and 
 
 Download or `git clone` this repo, then `/usr/bin/env python2.7 -m pip install -r requirements.txt [--user]` 
 
-_(if you dont have permission to install packages in global, use `--user` instead)_
+_(if you dont have permission to install packages in global, use_ `--user` _instead)_
 
 Add execute permission to q.py, __NOW YOU CAN__ `/path/to/q.py [options] Gaussian_inputs` 
 
@@ -58,6 +58,7 @@ Sample: [qg09.jsonc](./qg09.jsonc), JSONC Spec: [JSON w/ Comments](https://comme
 
  - Use_linda is **deprecated**. Multi-processor superserver is much cheaper & more powerful
  - When processing multi inputs, if batch size equals 1, it will use \<input_file_name\>.pbs but **not** a generated pbs name
+ - Batch check the existance of Gaussian input files
  - Ability to add custom shell commands in *.pbs file, e.g. 
     - you can add `%Chk=` line to `$QG09_GAU_INP_FILE` by shell in **Pre_run_Gaussian**
     - then add `formchk xxx.chk` in **Post_run_Gaussian** to get `*.fchk` 
@@ -72,10 +73,11 @@ _if you DO have interest in the example above, I can show you the code. But reme
 ```bash
 # write them into Pre_Gaussian_run, line feed should be replaced by \n and double quotes should be escaped
 
-    if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then
-        sed -i 's/^%chk=.*/'"%chk=${QG09_GAU_INP_FILE%.*}.chk"'/ig' $QG09_GAU_INP_FILE ;
+    es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+    if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+        sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
     else
-        sed -i '1s/^/'"%chk=${QG09_GAU_INP_FILE%.*}.chk\n"'/' $QG09_GAU_INP_FILE; fi
+        sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
 
 
 # What you should do in Post_run_Gaussian
@@ -87,10 +89,12 @@ Finally, the config in `qg09.jsonc` (I do some linting, actually)
 
 ```json
 {
-    "Pre_run_Gaussian": "if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then \n    sed -i 's/^%chk=.*/'\"%chk=${QG09_GAU_INP_FILE%.*}.chk\"'/ig' $QG09_GAU_INP_FILE ; \nelse \n    sed -i '1s/^/'\"%chk=${QG09_GAU_INP_FILE%.*}.chk\\n\"'/' $QG09_GAU_INP_FILE; fi \n\n\n#>>> GO Gaussian GO <<<",
+    "Pre_run_Gaussian": "es_gau_chk=$( echo \"%chk=${QG09_GAU_INP_FILE%.*}.chk\" | sed \"s/\\//\\\\\\\\\\//g\" ) \nif grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then \n    sed -i 's/^%chk=.*/'\"$es_gau_chk\"'/ig' $QG09_GAU_INP_FILE ; \nelse \n    sed -i '1s/^/'\"$es_gau_chk\\n\"'/' $QG09_GAU_INP_FILE; fi \n\n\n#>>> GO Gaussian GO <<<",
     "Post_run_Gaussian": "formchk ${QG09_GAU_INP_FILE%.*}.chk"
 }
 ```
+
+_Note:_ `\\\\\\\\\\/` _means the escape of_ `\\\\\/` _(Python string processing) and_ `\\\\\/` _is the escape of_ `\\/` _(what sed get), so we have_ `$es_gau_chk` _equals_ `%chk=.\/t-p0\/oxonium54.chk` _Then following_ `sed` _will drop the remaining backslash out and we got the correct line to insert into gaussian input file._
 
 thus a part of generated `*.pbs` file would be like:
 
@@ -102,11 +106,11 @@ export GAUSS_SCRDIR="/tmp/$USER/$PBS_JOBID"
 export QG09_GAU_INP_FILE="oxonium53.com"
 export QG09_GAU_LOG_FILE="oxonium53.log"
 
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
 if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
-    sed -i 's/^%chk=.*/'"%chk=${QG09_GAU_INP_FILE%.*}.chk"'/ig' $QG09_GAU_INP_FILE ; 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
 else 
-    sed -i '1s/^/'"%chk=${QG09_GAU_INP_FILE%.*}.chk\n"'/' $QG09_GAU_INP_FILE; fi 
-
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi
 
 #>>> GO Gaussian GO <<<
 /usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
