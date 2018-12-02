@@ -5,6 +5,19 @@ It can modify gaussian input files to assigned proccessor number and memory and 
 
 **Note**: you can ***easily*** modify this script to fit gaussian 16 (just use `g16` to replace `g09`) 
 
+## Installation
+
+Download or `git clone` this repo, then `/usr/bin/env python2.7 -m pip install -r requirements.txt [--user]` 
+
+_(if you dont have permission to install packages in global, use `--user` instead)_
+
+Add execute permission to q.py, __NOW YOU CAN__ `/path/to/q.py [options] Gaussian_inputs` 
+
+#### Some tips
+
+I\'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and override options
+
+
 ## What you can set in config file and CLI
 
 Type `q.py -h` and get helps
@@ -39,7 +52,7 @@ Note: you might need to ***CHECK*** the params and generated files after you cha
          V    Command-line params
     HIGH priority
 
-Sample: [qg09.jsonc](./qg09.jsonc), Type: [JSON w/ Comments](https://commentjson.readthedocs.io/en/latest/)
+Sample: [qg09.jsonc](./qg09.jsonc), JSONC Spec: [JSON w/ Comments](https://commentjson.readthedocs.io/en/latest/)
 
 ## Major difference compare with original qg09
 
@@ -102,9 +115,4 @@ if ls "/tmp/$USER/$PBS_JOBID/*.rwf" 2>&1; then rm "/tmp/$USER/$PBS_JOBID/*.rwf";
 formchk ${QG09_GAU_INP_FILE%.*}.chk
 
 ```
-
-
-## Some tips
-
-I \'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and override options
 
