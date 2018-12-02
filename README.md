@@ -1,11 +1,9 @@
 # qg09-py
 A python re-implement of qg09, without linda support
 
+It can modify gaussian input files to assigned proccessor number and memory and run multiple gaussian job in batch
+
 **Note**: you can ***easily*** modify this script to fit gaussian 16 (just use `g16` to replace `g09`) 
-
-## Some tips
-
-I \'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and override options
 
 ## What you can set in config file and CLI
 
@@ -55,4 +53,58 @@ Sample: [qg09.jsonc](./qg09.jsonc), Type: [JSON w/ Comments](https://commentjson
     - **DONT FORGET CHECKING YOUR SETTING BEFORE SUBMIT IT**
 
 Original version: [qg09 from MSU](https://github.com/msi-appdev/qg09)
+
+_if you DO have interest in the example above, I can show you the code. But remember, careful editing and keep testing_
+
+```bash
+# write them into Pre_Gaussian_run, line feed should be replaced by \n and double quotes should be escaped
+
+    if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then
+        sed -i 's/^%chk=.*/'"%chk=${QG09_GAU_INP_FILE%.*}.chk"'/ig' $QG09_GAU_INP_FILE ;
+    else
+        sed -i '1s/^/'"%chk=${QG09_GAU_INP_FILE%.*}.chk\n"'/' $QG09_GAU_INP_FILE; fi
+
+
+# What you should do in Post_run_Gaussian
+
+    formchk ${QG09_GAU_INP_FILE%.*}.chk
+```
+
+Finally, the config in `qg09.jsonc` (I do some linting, actually)
+
+```json
+{
+    "Pre_run_Gaussian": "if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then \n    sed -i 's/^%chk=.*/'\"%chk=${QG09_GAU_INP_FILE%.*}.chk\"'/ig' $QG09_GAU_INP_FILE ; \nelse \n    sed -i '1s/^/'\"%chk=${QG09_GAU_INP_FILE%.*}.chk\\n\"'/' $QG09_GAU_INP_FILE; fi \n\n\n#>>> GO Gaussian GO <<<",
+    "Post_run_Gaussian": "formchk ${QG09_GAU_INP_FILE%.*}.chk"
+}
+```
+
+thus a part of generated `*.pbs` file would be like:
+
+```bash
+
+cd <whatever directory>
+mkdir -p /tmp/$USER/$PBS_JOBID
+export GAUSS_SCRDIR="/tmp/$USER/$PBS_JOBID"
+export QG09_GAU_INP_FILE="oxonium53.com"
+export QG09_GAU_LOG_FILE="oxonium53.log"
+
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"%chk=${QG09_GAU_INP_FILE%.*}.chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"%chk=${QG09_GAU_INP_FILE%.*}.chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER/$PBS_JOBID/*.rwf" 2>&1; then rm "/tmp/$USER/$PBS_JOBID/*.rwf"; fi 
+
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
+```
+
+
+## Some tips
+
+I \'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and override options
 

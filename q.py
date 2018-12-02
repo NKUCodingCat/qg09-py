@@ -77,9 +77,9 @@ def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, work_dir, scr_dir):
         "",
         "cd {}",
         "mkdir -p {}",
-        "export GAUSS_SCRDIR='{}'", 
-        "export QG09_GAU_INP_FILE='{}'",
-        "export QG09_GAU_LOG_FILE='{}'", ""]).format(
+        "export GAUSS_SCRDIR=\"{}\"", 
+        "export QG09_GAU_INP_FILE=\"{}\"",
+        "export QG09_GAU_LOG_FILE=\"{}\"", ""]).format(
             work_dir,
             scr_dir,
             scr_dir,
@@ -145,7 +145,7 @@ def Check_gau_inp(string):
 
 import argparse, re, humanfriendly, copy, os, commentjson, time
 
-__VERSION__ = "0.1.0"
+__VERSION__ = "0.1.1"
 
 Defaults = {
     "Options_default":{
@@ -256,3 +256,4 @@ if not f[5]:
     submit_pbs_job(batch_file_name, job_List, args)
 
 # TODO: Unittest
+# TODO: Verbose mode / debug mode
