@@ -46,11 +46,12 @@ def submit_pbs_job(job_file, jobs, args):
         for i in jobs: print >>submit_fh, i
 
     if args.r == "yes" : 
-        print "The calculation {} has been submitted".format(qfile)
+        if args.verbose: print "The calculation {} has been submitted".format(qfile)
+        else: print qfile, 
         import os; os.system("qsub " + qfile)
     else:
-        print "The queue script {} has been created".format(qfile)
-        print "To run the calculation type: qsub " + qfile
+        if args.verbose: print "The queue script {} has been created\nTo Run the Calculation type: qsub {}".format(qfile, qfile)
+        else: print qfile, "Unsubmitted"
 
 def fix_input(Gau_job_text, Res_regex, Res_value):
     # Input must be generated as handle.read()
@@ -143,14 +144,24 @@ def Check_gau_inp(string):
 
 # ================ MAIN ========================
 
-import argparse, re, humanfriendly, copy, os, commentjson, time
+import argparse
+import copy
+import os
+import pprint
+import re
+import time
 
-__VERSION__ = "0.1.1"
+import commentjson
+import humanfriendly
+
+__VERSION__ = "0.2.0"
+__AUTHOR__  = "NKUCodingCat"
 
 Defaults = {
     "Options_default":{
         'b': 1,
         'e': "no",
+        'f': "Gau_batch_",
         'l': "",
         'm': "15000mb",
         'n': "1",
@@ -172,9 +183,6 @@ Defaults = {
     "Post_run_Gaussian": "",
 }
 
-# DONE:  system admin override default here => ./qg09rc
-# DONE:          user override default here => $HOME/.qg09rc
-# DONE: Working space override default here => $PWD/qg09rc
 
 for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.jsonc"), os.path.join(os.path.expanduser("~"), ".qg09.jsonc"), os.path.join(os.getcwd(), "qg09.jsonc")  ]:
     if os.path.isfile(i):
@@ -184,10 +192,11 @@ for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.json
 # ========= Args Check functions & arguments ================
 
 
-parser = argparse.ArgumentParser(description="qg09-py Ver %s - Process multiple Gaussian input as torque jobs"%__VERSION__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(prog="qg09py", description="qg09-py Ver %s - Process multiple Gaussian input as torque jobs"%__VERSION__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
 parser.add_argument('-e', help='email notification when ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["e"])
+parser.add_argument('-f', help='the preFix of multi jobs pbs file name', type=str, default=Defaults["Options_default"]["f"])
 parser.add_argument('-l', help='addition to PBS resource list', type=str, default=Defaults["Options_default"]["l"])
 parser.add_argument('-m', help='memory used per node <Amomut><Unit>', type=Check_mem_string, default=Defaults["Options_default"]["m"])
 parser.add_argument('-n', help='the number of nodes used', type=int, default=Defaults["Options_default"]["n"])
@@ -196,6 +205,8 @@ parser.add_argument('-q', help='the queue to submit the job', default=Defaults["
 parser.add_argument('-r', help='submit the job?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["r"])
 parser.add_argument('-s', help='scratch space to use (<Absolute or relative path> / {})'.format(" / ".join(map(lambda x: "\"%s\""%str(x), Defaults["Scratch_maps"].keys()))), type=Check_scr_string, default=Defaults["Options_default"]["s"])
 parser.add_argument('-t', help='the amount of wall clock time (format: hh:mm:ss)', type=Check_time_string, default=Defaults["Options_default"]["t"])
+parser.add_argument('-V', help='display version information and exit', action='version', version='%(prog)s v{} - By {}'.format(__VERSION__, __AUTHOR__))
+parser.add_argument('-v', '--verbose', help="print extra informations and makes you annoyed", action='store_true')
 parser.add_argument('-x', help='additional PBS node features required', default=Defaults["Options_default"]["x"])
 
 parser.add_argument('Gau_inputs', nargs="+", type=Check_gau_inp, help='Gaussian INPUT file (*.com or *.gjf)')
@@ -208,7 +219,9 @@ vars(args)["PBS_envs"] = Defaults["PBS_envs"]
 vars(args)["Work_dir"] = os.getcwd()
 vars(args)["Pre_run_Gaussian"] = Defaults["Pre_run_Gaussian"]
 vars(args)["Post_run_Gaussian"] = Defaults["Post_run_Gaussian"]
-print args
+if args.verbose: 
+    pprint.pprint(vars(args))
+    print "============= START PROCESSING GAUSSIAN INPUT =================="
 
 # ==========================================================
 
@@ -219,6 +232,8 @@ def batch_Gen(batch, args, Gau_inps):
         if batch == 1 : scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID")
         else:           scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID", str(idx%batch))
         
+        if args.verbose: print "\tProcessing %s ..."%inp, 
+
         with open(inp) as f:
             Q = f.read()
             Q = fix_input(Q, "^%nprocs[^=]*=[^=]+$", "%%NProcShared=%d"%args.p)
@@ -226,6 +241,8 @@ def batch_Gen(batch, args, Gau_inps):
         
         with open(inp, "w") as f:
             f.write(Q)
+
+        if args.verbose: print "Done"
 
         f_base = os.path.splitext(inp)[0]
 
@@ -244,7 +261,7 @@ job_List = []
 for f in batch_Gen(args.b, args, args.Gau_inputs):
 
     if args.b == 1 : batch_file_name = f[1]
-    else:            batch_file_name = "Gau_Batch_" + str(f[2]) + "_" + str(Start_time)
+    else:            batch_file_name = args.f + str(f[2]) + "_" + str(Start_time)
 
     job_List.append(f[4])
 
@@ -256,4 +273,3 @@ if not f[5]:
     submit_pbs_job(batch_file_name, job_List, args)
 
 # TODO: Unittest
-# TODO: Verbose mode / debug mode
