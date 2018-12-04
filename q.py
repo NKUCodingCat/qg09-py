@@ -46,9 +46,13 @@ def submit_pbs_job(job_file, jobs, args):
         for i in jobs: print >>submit_fh, i
 
     if args.r == "yes" : 
+        import os, sys
+
         if args.verbose: print "The calculation {} has been submitted".format(qfile)
-        else: print qfile, 
-        import os; os.system("qsub " + qfile)
+        else: 
+            print qfile, "\t\t", 
+            sys.stdout.flush()  # It is ... It is a feature
+        os.system("qsub " + qfile)
     else:
         if args.verbose: print "The queue script {} has been created\nTo Run the Calculation type: qsub {}".format(qfile, qfile)
         else: print qfile, "Unsubmitted"
@@ -154,7 +158,7 @@ import time
 import commentjson
 import humanfriendly
 
-__VERSION__ = "0.2.0"
+__VERSION__ = "0.2.1"
 __AUTHOR__  = "NKUCodingCat"
 
 Defaults = {
