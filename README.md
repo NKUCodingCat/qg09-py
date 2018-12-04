@@ -22,17 +22,21 @@ I\'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and 
 
 Type `q.py -h` and get helps
 
-    -b B         the number of files in each batch job 
-    -e {yes,no}  email notification when ended? 
-    -l L         addition to PBS resource list 
-    -m M         memory used per node <Amomut><Unit> 
-    -n N         the number of nodes used  <- I think you should keep it in 1
-    -p P         the number of processors used per node 
-    -q Q         the queue to submit the job 
-    -r {yes,no}  submit the job? 
-    -s S         scratch space to use 
-    -t T         the amount of wall clock time (format: hh:mm:ss) 
-    -x X         additional PBS node features required 
+    -h, --help     show this help message and exit
+    -b B           the number of files in each batch job 
+    -e {yes,no}    email notification when ended? 
+    -f F           the preFix of multi jobs pbs file name 
+    -l L           addition to PBS resource list 
+    -m M           memory used per node <Amomut><Unit> 
+    -n N           the number of nodes used  <- I think you should keep it in 1
+    -p P           the number of processors used per node 
+    -q Q           the queue to submit the job 
+    -r {yes,no}    submit the job? 
+    -s S           scratch space to use 
+    -t T           the amount of wall clock time (format: hh:mm:ss) 
+    -V             display version information and exit
+    -v, --verbose  print extra informations and makes you annoyed 
+    -x X           additional PBS node features required 
 
 ## What you can set in config file
     Scratch_maps        <= you can set the alias of scratch directory
