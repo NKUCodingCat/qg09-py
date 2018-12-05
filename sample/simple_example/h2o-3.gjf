@@ -1,4 +1,6 @@
-# opt(MaxC=100) b3lyp/6-31+g 
+%mem=4096mb
+%NProcShared=10
+# opt(MaxC=100) b3lyp/6-31+g
 
 Title Card Required
 

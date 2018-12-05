@@ -1,0 +1,45 @@
+#!/bin/bash -l
+#
+# Job: .\h2o-3
+#
+#
+# qg09_py version 0.2.1
+#
+# To submit this script to the queue type:
+#    qsub .\h2o-3.pbs
+#
+#PBS -m n 
+#PBS -l nodes=1:ppn=10
+#PBS -l walltime=168:00:00
+#PBS -l mem=4096mb
+#PBS -e .\h2o-3.ER
+#PBS -o .\h2o-3.OU
+#PBS -q batch
+
+
+cd $PBS_O_WORKDIR
+
+
+ulimit -s unlimited
+
+# >>> PBS envs <<< 
+export PATH=/opt/nbo6/bin:$PATH 
+export GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09/bsd:/opt/soft/g09_E01_Purdue/g09:/opt/soft 
+source /opt/soft/g09_E01_Purdue/g09/bsd/g09.profile 
+export GAUSS_EXEDIR=/opt/soft/g09_E01_Purdue/g09:$GAUSS_EXEDIR
+
+# >>> PBS envs ends <<< 
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\simple_example
+mkdir -p /tmp/$USER\$PBS_JOBID
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID"
+export QG09_GAU_INP_FILE=".\h2o-3.gjf"
+export QG09_GAU_LOG_FILE=".\h2o-3.log"
+
+# >>>>>>>>>>>>>>>>  Go Gaussian Go  <<<<<<<<<<<<<<<<<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<<
+

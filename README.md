@@ -11,16 +11,16 @@ Download or `git clone` this repo, then `/usr/bin/env python2.7 -m pip install -
 
 _(if you dont have permission to install packages in global, use_ `--user` _instead)_
 
-Add execute permission to q.py, __NOW YOU CAN__ `/path/to/q.py [options] Gaussian_inputs` 
+Add execute permission to `qg09py`, __NOW YOU CAN__ `/path/to/qg09py [options] Gaussian_inputs` 
 
 #### Some tips
 
-I\'d like to use `alias qg09='/<path_to_q.py>/q.py -r yes '` to set command and override options
+I\'d like to use `alias qg09='/<path_to_qg09py>/qg09py -r yes '` to set command and override options
 
 
 ## What you can set in config file and CLI
 
-Type `q.py -h` and get helps
+Type `,/qg09py -h` and get helps
 
     -h, --help     show this help message and exit
     -b B           the number of files in each batch job 
