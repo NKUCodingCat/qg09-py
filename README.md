@@ -20,7 +20,7 @@ I\'d like to use `alias qg09='/<path_to_qg09py>/qg09py -r yes '` to set command 
 
 ## What you can set in config file and CLI
 
-Type `,/qg09py -h` and get helps
+Type `./qg09py -h` and get helps
 
     -h, --help     show this help message and exit
     -b B           the number of files in each batch job 
