@@ -1,0 +1,14 @@
+{
+    "Options_default": {
+        "p": 16, 
+        "m": "5gb",
+        "f": "Oxo_b_",
+        "b": 5
+    },
+    "Scratch_maps":{
+
+    }
+    , "PBS_envs": "module load gaussian09"
+    , "Pre_run_Gaussian":  "es_gau_chk=$( echo \"%chk=${QG09_GAU_INP_FILE%.*}.chk\" | sed \"s/\\//\\\\\\\\\\//g\" ) \nif grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then \n    sed -i 's/^%chk=.*/'\"$es_gau_chk\"'/ig' $QG09_GAU_INP_FILE ; \nelse \n    sed -i '1s/^/'\"$es_gau_chk\\n\"'/' $QG09_GAU_INP_FILE; fi \n\n\n#>>> GO Gaussian GO <<<"
+    , "Post_run_Gaussian": "# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< \nformchk ${QG09_GAU_INP_FILE%.*}.chk"
+}

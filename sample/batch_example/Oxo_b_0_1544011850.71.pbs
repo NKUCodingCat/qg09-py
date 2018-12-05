@@ -1,0 +1,133 @@
+#!/bin/bash -l
+#
+# Job: Oxo_b_0_1544011850.71
+#
+#
+# qg09_py version 0.2.1
+#
+# To submit this script to the queue type:
+#    qsub Oxo_b_0_1544011850.71.pbs
+#
+#PBS -m n 
+#PBS -l nodes=1:ppn=16
+#PBS -l walltime=168:00:00
+#PBS -l mem=5120mb
+#PBS -e Oxo_b_0_1544011850.71.ER
+#PBS -o Oxo_b_0_1544011850.71.OU
+#PBS -q batch
+
+
+cd $PBS_O_WORKDIR
+
+
+ulimit -s unlimited
+
+# >>> PBS envs <<< 
+module load gaussian09
+# >>> PBS envs ends <<< 
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\batch_example
+mkdir -p /tmp/$USER\$PBS_JOBID\0
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID\0"
+export QG09_GAU_INP_FILE="oxonium50.com"
+export QG09_GAU_LOG_FILE="oxonium50.log"
+
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID\0/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID\0/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< 
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\batch_example
+mkdir -p /tmp/$USER\$PBS_JOBID\1
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID\1"
+export QG09_GAU_INP_FILE="oxonium51.com"
+export QG09_GAU_LOG_FILE="oxonium51.log"
+
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID\1/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID\1/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< 
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\batch_example
+mkdir -p /tmp/$USER\$PBS_JOBID\2
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID\2"
+export QG09_GAU_INP_FILE="oxonium52.com"
+export QG09_GAU_LOG_FILE="oxonium52.log"
+
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID\2/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID\2/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< 
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\batch_example
+mkdir -p /tmp/$USER\$PBS_JOBID\3
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID\3"
+export QG09_GAU_INP_FILE="oxonium53.com"
+export QG09_GAU_LOG_FILE="oxonium53.log"
+
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID\3/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID\3/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< 
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
+
+cd C:\Users\NanKa\Documents\GitHub\qg09-py\sample\batch_example
+mkdir -p /tmp/$USER\$PBS_JOBID\4
+export GAUSS_SCRDIR="/tmp/$USER\$PBS_JOBID\4"
+export QG09_GAU_INP_FILE="oxonium54.com"
+export QG09_GAU_LOG_FILE="oxonium54.log"
+
+es_gau_chk=$( echo "%chk=${QG09_GAU_INP_FILE%.*}.chk" | sed "s/\//\\\\\//g" ) 
+if grep -io '%chk' $QG09_GAU_INP_FILE >/dev/null ; then 
+    sed -i 's/^%chk=.*/'"$es_gau_chk"'/ig' $QG09_GAU_INP_FILE ; 
+else 
+    sed -i '1s/^/'"$es_gau_chk\n"'/' $QG09_GAU_INP_FILE; fi 
+
+
+#>>> GO Gaussian GO <<<
+/usr/bin/time g09 < $QG09_GAU_INP_FILE >& $QG09_GAU_LOG_FILE
+if ls "/tmp/$USER\$PBS_JOBID\4/*.rwf" 2>&1; then rm "/tmp/$USER\$PBS_JOBID\4/*.rwf"; fi 
+
+# >>>>>>>>>>>  Gaussian Job done(maybe)  <<<<<<<<<<<<< 
+formchk ${QG09_GAU_INP_FILE%.*}.chk
+
