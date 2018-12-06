@@ -187,93 +187,94 @@ Defaults = {
     "Post_run_Gaussian": "",
 }
 
+if __name__ == "__main__":
 
-for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.jsonc"), os.path.join(os.path.expanduser("~"), ".qg09.jsonc"), os.path.join(os.getcwd(), "qg09.jsonc")  ]:
-    if os.path.isfile(i):
-        with open(i) as conf:
-            Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
+    for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.jsonc"), os.path.join(os.path.expanduser("~"), ".qg09.jsonc"), os.path.join(os.getcwd(), "qg09.jsonc")  ]:
+        if os.path.isfile(i):
+            with open(i) as conf:
+                Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
 
-# ========= Args Check functions & arguments ================
+    # ========= Args Check functions & arguments ================
 
 
-parser = argparse.ArgumentParser(prog="qg09py", description="qg09-py Ver %s - Process multiple Gaussian input as torque jobs"%__VERSION__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(prog="qg09py", description="qg09-py Ver %s - Process multiple Gaussian input as torque jobs"%__VERSION__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
-parser.add_argument('-e', help='email notification when ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["e"])
-parser.add_argument('-f', help='the preFix of multi jobs pbs file name', type=str, default=Defaults["Options_default"]["f"])
-parser.add_argument('-l', help='addition to PBS resource list', type=str, default=Defaults["Options_default"]["l"])
-parser.add_argument('-m', help='memory used per node <Amomut><Unit>', type=Check_mem_string, default=Defaults["Options_default"]["m"])
-parser.add_argument('-n', help='the number of nodes used', type=int, default=Defaults["Options_default"]["n"])
-parser.add_argument('-p', help='the number of processors used per node', type=int, default=Defaults["Options_default"]["p"])
-parser.add_argument('-q', help='the queue to submit the job', default=Defaults["Options_default"]["q"])
-parser.add_argument('-r', help='submit the job?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["r"])
-parser.add_argument('-s', help='scratch space to use (<Absolute or relative path> / {})'.format(" / ".join(map(lambda x: "\"%s\""%str(x), Defaults["Scratch_maps"].keys()))), type=Check_scr_string, default=Defaults["Options_default"]["s"])
-parser.add_argument('-t', help='the amount of wall clock time (format: hh:mm:ss)', type=Check_time_string, default=Defaults["Options_default"]["t"])
-parser.add_argument('-V', help='display version information and exit', action='version', version='%(prog)s v{} - By {}'.format(__VERSION__, __AUTHOR__))
-parser.add_argument('-v', '--verbose', help="print extra informations and makes you annoyed", action='store_true')
-parser.add_argument('-x', help='additional PBS node features required', default=Defaults["Options_default"]["x"])
+    parser.add_argument('-b', help='the number of files in each batch job', type=int, default=Defaults["Options_default"]["b"])
+    parser.add_argument('-e', help='email notification when ended?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["e"])
+    parser.add_argument('-f', help='the preFix of multi jobs pbs file name', type=str, default=Defaults["Options_default"]["f"])
+    parser.add_argument('-l', help='addition to PBS resource list', type=str, default=Defaults["Options_default"]["l"])
+    parser.add_argument('-m', help='memory used per node <Amomut><Unit>', type=Check_mem_string, default=Defaults["Options_default"]["m"])
+    parser.add_argument('-n', help='the number of nodes used', type=int, default=Defaults["Options_default"]["n"])
+    parser.add_argument('-p', help='the number of processors used per node', type=int, default=Defaults["Options_default"]["p"])
+    parser.add_argument('-q', help='the queue to submit the job', default=Defaults["Options_default"]["q"])
+    parser.add_argument('-r', help='submit the job?', type=str, choices=['yes', 'no'], default=Defaults["Options_default"]["r"])
+    parser.add_argument('-s', help='scratch space to use (<Absolute or relative path> / {})'.format(" / ".join(map(lambda x: "\"%s\""%str(x), Defaults["Scratch_maps"].keys()))), type=Check_scr_string, default=Defaults["Options_default"]["s"])
+    parser.add_argument('-t', help='the amount of wall clock time (format: hh:mm:ss)', type=Check_time_string, default=Defaults["Options_default"]["t"])
+    parser.add_argument('-V', help='display version information and exit', action='version', version='%(prog)s v{} - By {}'.format(__VERSION__, __AUTHOR__))
+    parser.add_argument('-v', '--verbose', help="print extra informations and makes you annoyed", action='store_true')
+    parser.add_argument('-x', help='additional PBS node features required', default=Defaults["Options_default"]["x"])
 
-parser.add_argument('Gau_inputs', nargs="+", type=Check_gau_inp, help='Gaussian INPUT file (*.com or *.gjf)')
+    parser.add_argument('Gau_inputs', nargs="+", type=Check_gau_inp, help='Gaussian INPUT file (*.com or *.gjf)')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-# ========== Parse args done, start some patch =============
+    # ========== Parse args done, start some patch =============
 
-vars(args)["PBS_envs"] = Defaults["PBS_envs"]
-vars(args)["Work_dir"] = os.getcwd()
-vars(args)["Pre_run_Gaussian"] = Defaults["Pre_run_Gaussian"]
-vars(args)["Post_run_Gaussian"] = Defaults["Post_run_Gaussian"]
-if args.verbose: 
-    pprint.pprint(vars(args))
-    print "============= START PROCESSING GAUSSIAN INPUT =================="
+    vars(args)["PBS_envs"] = Defaults["PBS_envs"]
+    vars(args)["Work_dir"] = os.getcwd()
+    vars(args)["Pre_run_Gaussian"] = Defaults["Pre_run_Gaussian"]
+    vars(args)["Post_run_Gaussian"] = Defaults["Post_run_Gaussian"]
+    if args.verbose: 
+        pprint.pprint(vars(args))
+        print "============= START PROCESSING GAUSSIAN INPUT =================="
 
-# ==========================================================
+    # ==========================================================
 
-def batch_Gen(batch, args, Gau_inps):
+    def batch_Gen(batch, args, Gau_inps):
 
-    for idx, inp in enumerate(Gau_inps):
+        for idx, inp in enumerate(Gau_inps):
 
-        if batch == 1 : scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID")
-        else:           scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID", str(idx%batch))
-        
-        if args.verbose: print "\tProcessing %s ..."%inp, 
+            if batch == 1 : scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID")
+            else:           scr_dir = os.path.join(args.s, "$USER", "$PBS_JOBID", str(idx%batch))
+            
+            if args.verbose: print "\tProcessing %s ..."%inp, 
 
-        with open(inp) as f:
-            Q = f.read()
-            Q = fix_input(Q, "^%nprocs[^=]*=[^=]+$", "%%NProcShared=%d"%args.p)
-            Q = fix_input(Q, "^%mem[^=]*=[^=]+$",    "%%mem=%dmb"%args.m)
-        
-        with open(inp, "w") as f:
-            f.write(Q)
+            with open(inp) as f:
+                Q = f.read()
+                Q = fix_input(Q, "^%nprocs[^=]*=[^=]+$", "%%NProcShared=%d"%args.p)
+                Q = fix_input(Q, "^%mem[^=]*=[^=]+$",    "%%mem=%dmb"%args.m)
+            
+            with open(inp, "w") as f:
+                f.write(Q)
 
-        if args.verbose: print "Done"
+            if args.verbose: print "Done"
 
-        f_base = os.path.splitext(inp)[0]
+            f_base = os.path.splitext(inp)[0]
 
-        pre_gau, gau = make_Gau_job_Block(inp, f_base+".log", args.Work_dir, scr_dir)
-        Gau_block = pre_gau + "\n" +\
-                    args.Pre_run_Gaussian + "\n" + \
-                    gau + "\n" + \
-                    args.Post_run_Gaussian + "\n"
+            pre_gau, gau = make_Gau_job_Block(inp, f_base+".log", args.Work_dir, scr_dir)
+            Gau_block = pre_gau + "\n" +\
+                        args.Pre_run_Gaussian + "\n" + \
+                        gau + "\n" + \
+                        args.Post_run_Gaussian + "\n"
 
-        #                                                        5: submit!  
-        yield ( inp, f_base, idx/batch, idx%batch, Gau_block , (idx+1)%batch == 0)
+            #                                                        5: submit!  
+            yield ( inp, f_base, idx/batch, idx%batch, Gau_block , (idx+1)%batch == 0)
 
-        
-Start_time = time.time()
-job_List = []
-for f in batch_Gen(args.b, args, args.Gau_inputs):
+            
+    Start_time = time.time()
+    job_List = []
+    for f in batch_Gen(args.b, args, args.Gau_inputs):
 
-    if args.b == 1 : batch_file_name = f[1]
-    else:            batch_file_name = args.f + str(f[2]) + "_" + str(Start_time)
+        if args.b == 1 : batch_file_name = f[1]
+        else:            batch_file_name = args.f + str(f[2]) + "_" + str(Start_time)
 
-    job_List.append(f[4])
+        job_List.append(f[4])
 
-    if f[5]: 
+        if f[5]: 
+            submit_pbs_job(batch_file_name, job_List, args)
+            job_List = []
+
+    if not f[5]:
         submit_pbs_job(batch_file_name, job_List, args)
-        job_List = []
-
-if not f[5]:
-    submit_pbs_job(batch_file_name, job_List, args)
 
 # TODO: Unittest

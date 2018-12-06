@@ -1,0 +1,46 @@
+>>> Q = open("../../qg09py").read()
+>>> import imp
+>>> module = imp.new_module("qg09")
+>>> exec Q in module.__dict__
+
+>>> # ---- Build env end, TEST Check_time_string  ----
+
+>>> module.Check_time_string("17:00:00") == "17:00:00"
+True
+
+>>> module.Check_time_string("1700:00")
+Traceback (most recent call last):
+ArgumentTypeError: '1700:00' does not fit format: hh:mm:ss
+
+>>> module.Check_time_string("78:a0:00")
+Traceback (most recent call last):
+ArgumentTypeError: '78:a0:00' does not fit format: hh:mm:ss
+
+>>> # ---- TEST Check_mem_string  ----
+
+>>> 0 == module.Check_mem_string("65536")
+<BLANKLINE>
+!! WARNING: Memory is smaller than 256MB !!
+<BLANKLINE>
+True
+
+>>> 255 == module.Check_mem_string("255M")
+<BLANKLINE>
+!! WARNING: Memory is smaller than 256MB !!
+<BLANKLINE>
+True
+
+>>> 256 == module.Check_mem_string("256M")
+True
+
+>>> 65536 == module.Check_mem_string("65536MB")
+True
+
+>>> 1024 == module.Check_mem_string("1g")
+True
+
+>>> 1024 == module.Check_mem_string("1048576k")
+True
+
+>>> 1126 == module.Check_mem_string("1.1g")
+True
