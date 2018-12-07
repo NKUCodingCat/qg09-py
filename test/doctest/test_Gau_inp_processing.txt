@@ -1,0 +1,9 @@
+>>> Q = open("../../qg09py").read()
+>>> import imp, os
+>>> module = imp.new_module("qg09")
+>>> exec Q in module.__dict__
+
+>>> # ---- Build env end, TEST submit_pbs_job  ----
+>>> # ---- TEST fix_input  ----
+>>> # ---- TEST make_Gau_job_Block  ----
+>>> # ---- TEST Merge_Config  ----
