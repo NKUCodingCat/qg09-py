@@ -1,5 +1,5 @@
 >>> Q = open("../../qg09py").read()
->>> import imp
+>>> import imp, os
 >>> module = imp.new_module("qg09")
 >>> exec Q in module.__dict__
 
@@ -44,3 +44,28 @@ True
 
 >>> 1126 == module.Check_mem_string("1.1g")
 True
+
+>>> # ---- TEST Check_scr_string  ----
+
+>>> module.Defaults["Scratch_maps"] = {"local": "LOCAL_TEST_PATH", "z": "Z_TEST_PATH"}
+>>> module.Check_scr_string("local") == "LOCAL_TEST_PATH"
+True
+>>> module.Check_scr_string("z") == "Z_TEST_PATH"
+True
+
+>>> tmp = module.Check_scr_string(".")
+<BLANKLINE>
+!! WARNING: you are using scratch ... Please ensure what you are doing !!
+<BLANKLINE>
+>>> os.path.abspath(tmp) and os.path.exists(tmp)
+True
+
+>>> # ---- TEST Check_gau_inp  ----
+
+>>> module.Check_gau_inp("../../qg09py") == "../../qg09py"
+True
+
+>>> module.Check_gau_inp("./DIR_NOT_EXIST./;ds") 
+Traceback (most recent call last):
+ArgumentTypeError: Gaussian input file ... does not exist!
+
