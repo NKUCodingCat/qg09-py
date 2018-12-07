@@ -104,15 +104,18 @@ def make_Gau_job_Block(Gau_inp_filename, Gau_log_filename, work_dir, scr_dir):
 def Merge_Config(Default_cfg, Override_config):
     
     Default_cfg = copy.deepcopy(Default_cfg)
+    Override_config = copy.deepcopy(Override_config)
 
     for key in Default_cfg.keys():
         if key in Override_config:
             if isinstance(Default_cfg[key], dict):
                 # Merge dictDefauDefault_cfg
-                assert isinstance(Override_config[key], dict), "Overriding config key %s is not a dictionary"
+                assert isinstance(Override_config[key], dict), "Overriding config key \"%s\" is not a dictionary" % key
+                Override_config[key] = {k:v for k, v in Override_config[key].items() if k in Default_cfg[key]}
                 Default_cfg[key].update(Override_config[key])
             else:
                 # replace value
+                assert not isinstance(Override_config[key], dict), "Overriding config key \"%s\" is a dictionary" % key
                 Default_cfg[key] = Override_config[key]
     
     return Default_cfg
@@ -192,7 +195,11 @@ if __name__ == "__main__":
     for i in [ os.path.join(os.path.split(os.path.realpath(__file__))[0], "qg09.jsonc"), os.path.join(os.path.expanduser("~"), ".qg09.jsonc"), os.path.join(os.getcwd(), "qg09.jsonc")  ]:
         if os.path.isfile(i):
             with open(i) as conf:
-                Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
+                try:
+                    Defaults = Merge_Config(Defaults, commentjson.loads(conf.read()))
+                except AssertionError, e:
+                    print "\n\n !!! ERROR while processing config file \"%s\" !!! \n\n" %(os.path.realpath(i))
+                    raise
 
     # ========= Args Check functions & arguments ================
 
