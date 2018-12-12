@@ -38,6 +38,35 @@ True
 >>> S.endswith("\n\n\n\n\n\n") == Gau_inp.endswith("\n\n\n\n\n\n") == False
 True
 
+>>> Gau_inp = """\
+... %nprocs=10
+... %MEM=70mb
+... # b3lyp/genecp opt(MaxC=80) scfcyc=256
+... 
+... Coal_kick_v2_Trial # 56
+... 
+... 0 1
+... C    2.291814   -2.356344   -1.351987
+... H    1.195092   -2.362162   -1.390523
+... O    2.952558   -2.646755   -0.394493
+... 
+... C O 0
+... 6-31+G*
+... ****
+... H 0
+... 3-21g
+... ****
+... 
+... 
+... 
+... 
+... """
+
+>>> S = Gau_inp[:]
+>>> Gau_inp = module.fix_input(Gau_inp, "^%nprocs[^=]*=[^=]+$", "%%NProcShared=%d"%20)
+>>> Gau_inp = module.fix_input(Gau_inp, "^%mem[^=]*=[^=]+$",    "%%mem=%dmb"%5120)
+>>> Gau_inp
+'%NProcShared=20\n%mem=5120mb\n# b3lyp/genecp opt(MaxC=80) scfcyc=256\n\nCoal_kick_v2_Trial # 56\n\n0 1\nC    2.291814   -2.356344   -1.351987\nH    1.195092   -2.362162   -1.390523\nO    2.952558   -2.646755   -0.394493\n\nC O 0\n6-31+G*\n****\nH 0\n3-21g\n****\n\n\n\n\n'
 
 >>> # ---- TEST make_Gau_job_Block  ----
 
